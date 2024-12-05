@@ -1,0 +1,765 @@
+<html><head><base href="http://example.com/" />
+<meta charset="UTF-8">
+<title>Prism Search</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background: #f5f7fa;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo-svg {
+  width: 180px;
+  height: 180px;
+  margin-bottom: 1rem;
+}
+
+.logo-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #2563eb, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.logo-tagline {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.search-container {
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.search-box {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.search-box:focus {
+  outline: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.results-container {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.result-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.result-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.result-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.result-snippet {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.result-url {
+  font-size: 0.8rem;
+  color: #2563eb;
+  margin-top: 0.8rem;
+  display: block;
+}
+
+.loading {
+  display: none;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+.experimental-btn {
+  background: linear-gradient(45deg, #2563eb, #7c3aed);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  margin: 1rem auto;
+  display: block;
+}
+
+.experimental-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.settings-btn {
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  margin: 1rem auto;
+  display: block;
+}
+
+.settings-btn:hover {
+  background: #f0f5ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.features-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.modal-content h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(45deg, #2563eb, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.feature-toggle {
+  display: flex;
+  align-items: center;
+  margin-top: 1.2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.feature-toggle:hover {
+  background: #f1f5f9;
+  transform: translateY(-2px);
+}
+
+.feature-toggle h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+.feature-toggle p {
+  color: #64748b;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.article-query-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.query-input {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-results {
+  text-align: center;
+  color: #666;
+  margin-top: 2rem;
+  display: none;
+}
+
+@keyframes prismRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.prism-shine {
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+/* Dark mode styles */
+body.dark-mode {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+body.dark-mode .search-box {
+  background: #2d2d2d;
+  color: #fff;
+}
+
+body.dark-mode .result-card {
+  background: #2d2d2d;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+body.dark-mode .result-title {
+  color: #fff;
+}
+
+body.dark-mode .result-snippet {
+  color: #ccc;
+}
+
+body.dark-mode .modal-content {
+  background: #1a1a1a;
+}
+
+body.dark-mode .feature-toggle {
+  background: #2d2d2d;
+}
+
+body.dark-mode .feature-toggle:hover {
+  background: #333;
+}
+
+body.dark-mode .feature-toggle h3 {
+  color: #e2e8f0;
+}
+
+body.dark-mode .feature-toggle p {
+  color: #94a3b8;
+}
+
+body.dark-mode .chatbot-input-container {
+  background: #1a1a1a;
+  border-color: #2d2d2d;
+}
+
+body.dark-mode .chatbot-input {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: white;
+}
+
+body.dark-mode .chatbot-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+}
+
+body.dark-mode .chatbot-message.user {
+  background: #3b3b3b;
+}
+
+body.dark-mode .chatbot-message.assistant {
+  background: #2d2d2d;
+}
+
+.chatbot-container {
+  position: fixed;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 350px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  display: none;
+  transition: all 0.3s ease;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.chatbot-header {
+  padding: 1.2rem;
+  background: linear-gradient(45deg, #2563eb, #7c3aed);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.chatbot-content {
+  padding: 1.2rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.chatbot-input-container {
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+  background: white;
+}
+
+.chatbot-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.chatbot-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.chatbot-message {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.chatbot-message.user {
+  background: #e0e7ff;
+  margin-left: 1rem;
+}
+
+.chatbot-message.assistant {
+  background: #f8fafc;
+  margin-right: 1rem;
+}
+</style>
+</head>
+<body>
+  <div class="beta-tag">Beta - Features will be added soon</div>
+  <div class="logo-container">
+    <svg class="logo-svg" viewBox="0 0 200 200">
+      <defs>
+        <linearGradient id="prismGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#2563eb" />
+          <stop offset="100%" style="stop-color:#7c3aed" />
+        </linearGradient>
+      </defs>
+      <g transform="translate(100,100)">
+        <path d="M0,-60 L52,30 L-52,30 Z" fill="url(#prismGradient)" opacity="0.9">
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from="0 0 0"
+            to="360 0 0"
+            dur="20s"
+            repeatCount="indefinite"
+          />
+        </path>
+        <circle cx="0" cy="0" r="10" fill="#fff" class="prism-shine" />
+      </g>
+    </svg>
+    <div class="logo-text">Prism Search</div>
+    <div class="logo-tagline">Discover knowledge through a new lens</div>
+  </div>
+  
+  <button class="experimental-btn">Experimental Features</button>
+  <button class="settings-btn">Settings</button>
+  
+  <div class="search-container">
+    <input type="text" class="search-box" placeholder="Search anything..." autocomplete="off">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+    </div>
+    <div class="no-results">No results found</div>
+    <div class="results-container"></div>
+  </div>
+
+  <div class="features-modal">
+    <div class="modal-content">
+      <span class="close-modal">×</span>
+      <h2>Experimental Features</h2>
+      <div class="feature-toggle">
+        <div>
+          <h3>Article Query Assistant</h3>
+          <p>Click on any search result to ask specific questions about the article content.</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="queryFeatureToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="feature-toggle">
+        <div>
+          <h3>AI Assistant (Super Beta)</h3>
+          <p>Type "Do" followed by your request to interact with our AI assistant. Currently in development.</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="aiAssistantToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-modal">
+    <div class="modal-content">
+      <span class="close-modal">×</span>
+      <h2>Settings</h2>
+      <div class="feature-toggle">
+        <div>
+          <h3>Dark Mode</h3>
+          <p>Switch to a darker theme that's easier on the eyes</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="article-query-modal">
+    <div class="modal-content">
+      <span class="close-modal">×</span>
+      <h2 class="query-article-title"></h2>
+      <p>Ask a question about this article:</p>
+      <input type="text" class="query-input" placeholder="What would you like to know?">
+      <div class="query-response"></div>
+    </div>
+  </div>
+
+  <div class="chatbot-container">
+    <div class="chatbot-header">AI Assistant (Super Beta)</div>
+    <div class="chatbot-content">
+      <div class="chatbot-message assistant">
+        👋 Hello! I'm Prism's AI Assistant. I'm currently in super beta, so I can't do much yet. Soon, I'll be able to help you search and summarize articles! Feel free to type a message below.
+      </div>
+    </div>
+    <div class="chatbot-input-container">
+      <input type="text" class="chatbot-input" placeholder="Type your message here..." disabled>
+    </div>
+  </div>
+
+<script>
+const searchBox = document.querySelector('.search-box');
+const resultsContainer = document.querySelector('.results-container');
+const loadingElement = document.querySelector('.loading');
+const noResultsElement = document.querySelector('.no-results');
+const experimentalBtn = document.querySelector('.experimental-btn');
+const settingsBtn = document.querySelector('.settings-btn');
+const featuresModal = document.querySelector('.features-modal');
+const settingsModal = document.querySelector('.settings-modal');
+const articleQueryModal = document.querySelector('.article-query-modal');
+const queryFeatureToggle = document.getElementById('queryFeatureToggle');
+const aiAssistantToggle = document.getElementById('aiAssistantToggle');
+const chatbotContainer = document.querySelector('.chatbot-container');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const closeButtons = document.querySelectorAll('.close-modal');
+
+let timeoutId;
+
+// Modal handling
+experimentalBtn.addEventListener('click', () => {
+  featuresModal.style.display = 'flex';
+});
+
+settingsBtn.addEventListener('click', () => {
+  settingsModal.style.display = 'flex';
+});
+
+closeButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    featuresModal.style.display = 'none';
+    articleQueryModal.style.display = 'none';
+    settingsModal.style.display = 'none';
+  });
+});
+
+window.addEventListener('click', (e) => {
+  if (e.target === featuresModal) featuresModal.style.display = 'none';
+  if (e.target === articleQueryModal) articleQueryModal.style.display = 'none';
+  if (e.target === settingsModal) settingsModal.style.display = 'none';
+});
+
+searchBox.addEventListener('input', (e) => {
+  clearTimeout(timeoutId);
+  
+  if (e.target.value.trim() === '') {
+    resultsContainer.innerHTML = '';
+    noResultsElement.style.display = 'none';
+    chatbotContainer.style.display = 'none';
+    return;
+  }
+
+  // New AI Assistant feature
+  if (aiAssistantToggle.checked && e.target.value.trim().toLowerCase().startsWith('do ')) {
+    chatbotContainer.style.display = 'block';
+    resultsContainer.innerHTML = '';
+    loadingElement.style.display = 'none';
+    return;
+  } else {
+    chatbotContainer.style.display = 'none';
+  }
+
+  timeoutId = setTimeout(() => {
+    performSearch(e.target.value);
+  }, 500);
+});
+
+async function performSearch(query) {
+  loadingElement.style.display = 'block';
+  resultsContainer.innerHTML = '';
+  noResultsElement.style.display = 'none';
+
+  try {
+    const response = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+    const data = await response.json();
+    
+    loadingElement.style.display = 'none';
+
+    if (data.query.search.length === 0) {
+      noResultsElement.style.display = 'block';
+      return;
+    }
+
+    data.query.search.forEach(result => {
+      const resultCard = document.createElement('div');
+      resultCard.className = 'result-card';
+      
+      resultCard.innerHTML = `
+        <div class="result-title">${result.title}</div>
+        <div class="result-snippet">${result.snippet.replace(/<\/?[^>]+(>|$)/g, "")}</div>
+        <a href="https://en.wikipedia.org/?curid=${result.pageid}" target="_blank" class="result-url">Read more on Wikipedia</a>
+      `;
+
+      if (queryFeatureToggle.checked) {
+        resultCard.addEventListener('click', () => {
+          document.querySelector('.query-article-title').textContent = result.title;
+          articleQueryModal.style.display = 'flex';
+          document.querySelector('.query-response').innerHTML = ''; // Clear previous responses
+          document.querySelector('.query-input').value = ''; // Clear previous input
+        });
+      }
+
+      resultsContainer.appendChild(resultCard);
+    });
+  } catch (error) {
+    console.error('Error fetching results:', error);
+    loadingElement.style.display = 'none';
+    noResultsElement.style.display = 'block';
+    noResultsElement.textContent = 'An error occurred while fetching results';
+  }
+}
+
+// Query input handling
+const queryInput = document.querySelector('.query-input');
+queryInput.addEventListener('keypress', async (e) => {
+  if (e.key === 'Enter') {
+    const articleTitle = document.querySelector('.query-article-title').textContent;
+    const query = queryInput.value;
+    const queryResponse = document.querySelector('.query-response');
+    
+    queryResponse.innerHTML = `
+      <div style="margin-top: 1rem; padding: 1rem; background: #f5f7fa; border-radius: 8px;">
+        <div class="loading-spinner" style="margin-bottom: 1rem;"></div>
+        <p>Analyzing article and generating response...</p>
+      </div>
+    `;
+
+    try {
+      const response = await fetch('/api/ai_completion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: `You are a helpful AI assistant answering questions about Wikipedia articles. 
+          Given the article title "${articleTitle}", please provide a detailed response to this question: "${query}".
+          Format your response in a clear, concise way that directly addresses the user's question.
+          
+          <typescript-interface>
+          interface Response {
+            answer: string;
+            confidence: number;
+            sources?: string[];
+          }
+          </typescript-interface>
+          
+          <example>
+          {
+            "answer": "The Theory of Relativity was published by Albert Einstein in 1905. It fundamentally changed our understanding of space, time, and gravity.",
+            "confidence": 0.95,
+            "sources": ["Einstein's 1905 paper", "Historical records"]
+          }
+          </example>`,
+          data: {
+            articleTitle,
+            query
+          }
+        })
+      });
+
+      const data = await response.json();
+      
+      queryResponse.innerHTML = `
+        <div style="margin-top: 1rem; padding: 1rem; background: #f5f7fa; border-radius: 8px;">
+          <p style="color: #1a1a1a; line-height: 1.6;">${data.answer}</p>
+          ${data.sources ? `
+            <div style="margin-top: 0.8rem; font-size: 0.9rem; color: #666;">
+              <strong>Sources:</strong> ${data.sources.join(', ')}
+            </div>
+          ` : ''}
+          <div style="margin-top: 0.8rem; font-size: 0.8rem; color: #666;">
+            Confidence: ${Math.round(data.confidence * 100)}%
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      queryResponse.innerHTML = `
+        <div style="margin-top: 1rem; padding: 1rem; background: #fff0f0; border-radius: 8px; color: #cc0000;">
+          <p>Sorry, I couldn't process your question at this time. Please try again later.</p>
+        </div>
+      `;
+    }
+  }
+});
+
+// Dark mode handling
+const isDarkMode = localStorage.getItem('darkMode') === 'true';
+darkModeToggle.checked = isDarkMode;
+if (isDarkMode) {
+  document.body.classList.add('dark-mode');
+}
+
+darkModeToggle.addEventListener('change', (e) => {
+  if (e.target.checked) {
+    document.body.classList.add('dark-mode');
+    localStorage.setItem('darkMode', 'true');
+  } else {
+    document.body.classList.remove('dark-mode');
+    localStorage.setItem('darkMode', 'false');
+  }
+});
+
+// Chatbot input handling
+const chatbotInput = document.querySelector('.chatbot-input');
+const chatbotContent = document.querySelector('.chatbot-content');
+
+chatbotInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && chatbotInput.value.trim() !== '') {
+    // Add user message
+    const userMessage = document.createElement('div');
+    userMessage.className = 'chatbot-message user';
+    userMessage.textContent = chatbotInput.value;
+    chatbotContent.appendChild(userMessage);
+    
+    // Add assistant response
+    const assistantMessage = document.createElement('div');
+    assistantMessage.className = 'chatbot-message assistant';
+    assistantMessage.textContent = "I'm still in development and can't process requests yet. Check back soon for updates!";
+    chatbotContent.appendChild(assistantMessage);
+    
+    // Clear input and scroll to bottom
+    chatbotInput.value = '';
+    chatbotContent.scrollTop = chatbotContent.scrollHeight;
+  }
+});
+
+// Update the AI Assistant toggle handler
+aiAssistantToggle.addEventListener('change', (e) => {
+  chatbotInput.disabled = !e.target.checked;
+});
+</script>
+</body>
+</html>
